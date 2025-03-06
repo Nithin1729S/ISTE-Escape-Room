@@ -5,58 +5,87 @@ import { motion } from 'framer-motion';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-// Placeholder image - replace with your own
 const PUZZLE_IMAGE = 'rick.jpg';
 
 interface PuzzlePieceProps {
-  id: number;
-  image: string;
-  position: number;
+  piece: number;      // The unique number of the piece
+  position: number;   // The grid cell index (its position)
   onDrop: (fromPos: number, toPos: number) => void;
 }
 
-function PuzzlePiece({ id, image, position, onDrop }: PuzzlePieceProps) {
+function PuzzlePiece({ piece, position, onDrop }: PuzzlePieceProps) {
   const ref = useRef(null);
 
-  // Set up the drag behavior
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: 'piece',
-    item: { fromPosition: position },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
+  // Setup dragging. The dragged item carries its grid cell position.
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: 'piece',
+      item: { fromPosition: position },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
     }),
-  }));
+    [position]
+  );
 
-  // Set up the drop behavior
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: 'piece',
-    drop: (item: { fromPosition: number }) => {
-      onDrop(item.fromPosition, position);
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
+  // Setup dropping. When dropped, call onDrop with the positions.
+  const [{ isOver }, drop] = useDrop(
+    () => ({
+      accept: 'piece',
+      drop: (item: { fromPosition: number }) => {
+        if (item.fromPosition !== position) {
+          onDrop(item.fromPosition, position);
+        }
+      },
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+      }),
     }),
-  }));
+    [position, onDrop]
+  );
 
-  // Combine the drag and drop refs so they both use the same element.
+  // Combine drag and drop refs.
   drag(drop(ref));
 
-  // Assuming the full image is 300x300 and you have 3 columns,
-  // each piece is 100x100. Use negative offsets to show the right part.
+  // Calculate which part of the 300×300 image to show.
   const pieceStyle = {
-    backgroundImage: `url(${image})`,
+    backgroundImage: `url(${PUZZLE_IMAGE})`,
     backgroundSize: '300px 300px',
-    backgroundPosition: `-${(id % 3) * 100}px -${Math.floor(id / 3) * 100}px`,
+    backgroundPosition: `-${(piece % 3) * 100}px -${Math.floor(piece / 3) * 100}px`,
+    width: '100%',
+    height: '100%',
   };
 
   return (
-    <div ref={ref} className={`puzzle-slot ${isOver ? 'can-drop' : ''}`}>
+    <div
+      ref={ref}
+      style={{
+        width: '100px',
+        height: '100px',
+        border: '1px solid #ccc',
+        position: 'relative',
+      }}
+    >
       <motion.div
-        className={`puzzle-piece w-full h-full rounded ${isDragging ? 'dragging' : ''}`}
-        style={pieceStyle}
+        style={{
+          ...pieceStyle,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          opacity: isDragging ? 0.5 : 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '20px',
+          textShadow: '0 0 3px black',
+        }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-      />
+      >
+        {piece + 1}
+      </motion.div>
     </div>
   );
 }
@@ -66,29 +95,27 @@ interface PuzzleGameProps {
 }
 
 export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
+  // The array holds the unique piece numbers. Its order defines the grid.
   const [pieces, setPieces] = useState<number[]>([]);
 
   useEffect(() => {
-    // Initialize puzzle in solved state
+    // Start with a solved puzzle: [0, 1, 2, …, 8]
     const initialPieces = Array.from({ length: 9 }, (_, i) => i);
-    // Shuffle pieces
-    const shuffledPieces = [...initialPieces].sort(() => Math.random() - 0.5);
-    setPieces(shuffledPieces);
+    setPieces(initialPieces);
   }, []);
 
   const handleDrop = (fromPos: number, toPos: number) => {
-    const newPieces = [...pieces];
-    // Swap the two pieces
-    const temp = newPieces[fromPos];
-    newPieces[fromPos] = newPieces[toPos];
-    newPieces[toPos] = temp;
-    setPieces(newPieces);
-
-    // Check if puzzle is solved
-    const isSolved = newPieces.every((piece, index) => piece === index);
-    if (isSolved) {
-      setTimeout(onSuccess, 500);
-    }
+    setPieces((prev) => {
+      const newPieces = [...prev];
+      // Swap the pieces in the two fixed grid cells.
+      [newPieces[fromPos], newPieces[toPos]] = [newPieces[toPos], newPieces[fromPos]];
+      // Check if the puzzle is solved (pieces in order).
+      const isSolved = newPieces.every((p, i) => p === i);
+      if (isSolved) {
+        setTimeout(onSuccess, 500);
+      }
+      return newPieces;
+    });
   };
 
   return (
@@ -96,34 +123,31 @@ export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-md p-8 rounded-lg bg-card/80 backdrop-blur shadow-xl border border-primary/20"
+        style={{
+          width: '320px',
+          padding: '10px',
+          background: '#f9f9f9',
+          borderRadius: '8px',
+          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+        }}
       >
-        <h2 className="text-2xl font-bold text-primary text-center mb-6">
-          Arrange the Map Pieces
-        </h2>
-
+        <h2 style={{ textAlign: 'center' }}>Drag & Drop Puzzle</h2>
         <div
-          className="puzzle-grid"
           style={{
             width: '300px',
             height: '300px',
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '2px',
           }}
         >
           {pieces.map((piece, index) => (
-            <PuzzlePiece
-              key={index}
-              id={piece}
-              image={PUZZLE_IMAGE}
-              position={index}
-              onDrop={handleDrop}
-            />
+            // Use the grid cell index as key so the cell position is fixed.
+            <PuzzlePiece key={index} piece={piece} position={index} onDrop={handleDrop} />
           ))}
         </div>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Drag and drop the pieces to complete the map
+        <p style={{ textAlign: 'center' }}>
+          Drag and drop the numbered pieces to swap them.
         </p>
       </motion.div>
     </DndProvider>
