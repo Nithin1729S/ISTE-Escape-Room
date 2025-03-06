@@ -10,43 +10,39 @@ interface PuzzlePieceProps {
   position: number;
   onDrop: (fromPos: number, toPos: number) => void;
   size: number;
+  boardSize: number;
 }
 
-function PuzzlePiece({ piece, position, onDrop, size }: PuzzlePieceProps) {
+function PuzzlePiece({ piece, position, onDrop, size, boardSize }: PuzzlePieceProps) {
   const ref = React.useRef(null);
 
-  const [{ isDragging }, drag] = useDrag(
-    () => ({
-      type: 'piece',
-      item: { fromPosition: position },
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'piece',
+    item: { fromPosition: position },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
     }),
-    [position]
-  );
+  }), [position]);
 
-  const [{ isOver }, drop] = useDrop(
-    () => ({
-      accept: 'piece',
-      drop: (item: { fromPosition: number }) => {
-        if (item.fromPosition !== position) {
-          onDrop(item.fromPosition, position);
-        }
-      },
-      collect: (monitor) => ({
-        isOver: monitor.isOver(),
-      }),
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'piece',
+    drop: (item: { fromPosition: number }) => {
+      if (item.fromPosition !== position) {
+        onDrop(item.fromPosition, position);
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
     }),
-    [position, onDrop]
-  );
+  }), [position, onDrop]);
 
   drag(drop(ref));
 
-  const pieceSize = 600 / size;
+  // Calculate each piece's size based on boardSize instead of a fixed 600px
+  const pieceSize = boardSize / size;
   const pieceStyle = {
     backgroundImage: `url(${PUZZLE_IMAGE})`,
-    backgroundSize: '600px 600px',
+    backgroundSize: `${boardSize}px ${boardSize}px`,
     backgroundPosition: `-${(piece % size) * pieceSize}px -${Math.floor(piece / size) * pieceSize}px`,
     width: '100%',
     height: '100%',
@@ -75,9 +71,7 @@ function PuzzlePiece({ piece, position, onDrop, size }: PuzzlePieceProps) {
         className={`${isOver ? 'brightness-110' : ''}`}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          {/* <span className="bg-black/50 backdrop-blur-sm text-white/90 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium">
-            {piece + 1}
-          </span> */}
+          {/* Optional piece label */}
         </div>
       </motion.div>
     </div>
@@ -112,7 +106,21 @@ interface PuzzleGameProps {
 export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
   const [pieces, setPieces] = React.useState<number[]>([]);
   const [isComplete, setIsComplete] = React.useState(false);
+  const [boardSize, setBoardSize] = React.useState(600);
   const size = 4;
+  const boardRef = React.useRef<HTMLDivElement>(null);
+
+  // Measure the board container width and update boardSize accordingly
+  React.useEffect(() => {
+    const updateBoardSize = () => {
+      if (boardRef.current) {
+        setBoardSize(boardRef.current.clientWidth);
+      }
+    };
+    updateBoardSize();
+    window.addEventListener('resize', updateBoardSize);
+    return () => window.removeEventListener('resize', updateBoardSize);
+  }, []);
 
   React.useEffect(() => {
     let shuffledPieces;
@@ -141,7 +149,7 @@ export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screenflex flex-col items-center justify-center p-8">
+      <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -149,10 +157,13 @@ export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
         >
           {!isComplete ? (
             <>
+              {/* Responsive container with a max width */}
               <div
+                ref={boardRef}
                 style={{
-                  width: '600px',
-                  height: '600px',
+                  width: '90vw',
+                  maxWidth: '600px',
+                  aspectRatio: '1 / 1', // ensures the board stays square
                   display: 'grid',
                   gridTemplateColumns: `repeat(${size}, 1fr)`,
                   padding: '1px',
@@ -166,6 +177,7 @@ export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
                     position={index}
                     onDrop={handleDrop}
                     size={size}
+                    boardSize={boardSize}
                   />
                 ))}
               </div>
