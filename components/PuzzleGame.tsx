@@ -107,7 +107,7 @@ export default function PuzzleGame({ onSuccess }: PuzzleGameProps) {
   const [pieces, setPieces] = React.useState<number[]>([]);
   const [isComplete, setIsComplete] = React.useState(false);
   const [boardSize, setBoardSize] = React.useState(600);
-  const size = 4;
+  const size = 5;
   const boardRef = React.useRef<HTMLDivElement>(null);
 
   // Measure the board container width and update boardSize accordingly
