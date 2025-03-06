@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 220 40% 10%;
+    --foreground: 45 100% 96%;
+    --card: 220 40% 15%;
+    --card-foreground: 45 100% 96%;
+    --popover: 220 40% 15%;
+    --popover-foreground: 45 100% 96%;
+    --primary: 47 95% 50%;
+    --primary-foreground: 220 40% 10%;
+    --secondary: 220 40% 20%;
+    --secondary-foreground: 45 100% 96%;
+    --muted: 220 40% 20%;
+    --muted-foreground: 45 100% 80%;
+    --accent: 47 95% 50%;
+    --accent-foreground: 220 40% 10%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 45 100% 96%;
+    --border: 220 40% 30%;
+    --input: 220 40% 30%;
+    --ring: 47 95% 50%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: url('/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+}
+
+.puzzle-piece {
+  @apply cursor-grab active:cursor-grabbing transition-transform duration-200;
+}
+
+.puzzle-piece.dragging {
+  @apply scale-105 shadow-xl z-50;
+}
+
+.puzzle-grid {
+  @apply grid grid-cols-3 gap-1 bg-black/20 p-1 rounded-lg;
+}
+
+.puzzle-slot {
+  @apply aspect-square bg-black/40 rounded transition-all duration-200;
+}
+
+.puzzle-slot.can-drop {
+  @apply bg-primary/40;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+.wave-animation {
+  animation: wave 4s ease-in-out infinite;
+}
