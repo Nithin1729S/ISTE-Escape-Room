@@ -37,7 +37,7 @@ export default function PasswordGate({ password, onSuccess }: PasswordGateProps)
           <Lock className="w-16 h-16 mx-auto mb-4 text-primary" />
         </motion.div>
         <h1 className="text-2xl font-bold text-primary mb-2">Pirate&apos;s Gate</h1>
-        <p className="text-muted-foreground">Speak the secret word to enter, ye scurvy dog!</p>
+        {/* <p className="text-muted-foreground">Speak the secret word to enter, ye scurvy dog!</p> */}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,9 +63,9 @@ export default function PasswordGate({ password, onSuccess }: PasswordGateProps)
           Unlock the Gate
         </motion.button>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        {/* <p className="text-center text-sm text-muted-foreground mt-4">
           Hint: The name of Jack Sparrow&apos;s beloved ship
-        </p>
+        </p> */}
       </form>
     </motion.div>
   );
