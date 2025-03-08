@@ -9,7 +9,7 @@ import SuccessPage from '@/components/SuccessPage';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<'password' | 'puzzle' | 'success'>('password');
-  const [password] = useState('41221511');
+  const [password] = useState('11221541');
 
   const handlePasswordSuccess = () => {
     setCurrentPage('puzzle');
