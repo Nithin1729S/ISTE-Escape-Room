@@ -19,7 +19,7 @@ An **Escape Room** event website built with **Next.js** and **TypeScript**.
 Clone the repository and install dependencies:  
 
 ```bash
-git clone https://github.com/your-username/iste-escape-room.git
-cd iste-escape-room
+git clone https://github.com/Nithin1729S/ISTE-Escape-Room.git
+cd ISTE-Escape-Room
 npm install
 npm run dev
